@@ -1,0 +1,106 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD com.example.Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhou.customer.mapper.ReportMapper">
+    <resultMap id="result" type="com.zhou.customer.entity.Report">
+        <result property="id" column="id"/>
+        <result property="generateReportTm" column="t_generate_tm"/>
+        <result property="user.id" column="c_seller_id"/>
+        <result property="user.mobile" column="c_seller_mobile"/>
+        <result property="sellNum" column="n_sell_num"/>
+        <result property="groupSellNum" column="n_group_num"/>
+        <result property="calcBgnTm" column="t_bgn_tm"/>
+        <result property="calcEndTm" column="t_end_tm"/>
+        <result property="basePerformance" column="n_base_performance"/>
+        <result property="groupPerformance" column="n_group_performance"/>
+        <result property="totalPerformance" column="n_total_performance"/>
+    </resultMap>
+    <select id="listReport" resultMap="result">
+        SELECT * FROM t_report order by t_generate_tm desc limit 200
+    </select>
+    <select id="findReportById" resultMap="result">
+        SELECT * FROM t_report where id=#{id}
+    </select>
+    <select id="findReportByMobile" resultMap="result">
+        SELECT * FROM t_report where c_mobile=#{mobile}
+    </select>
+
+    <insert id="insert" parameterType="com.zhou.customer.entity.Report"
+            keyProperty="id" useGeneratedKeys="true">
+        INSERT INTO t_report
+        (
+        id,t_generate_tm,c_seller_id,c_seller_mobile,n_sell_num,n_group_num,
+        t_bgn_tm,t_end_tm,n_base_performance,n_group_performance,n_total_performance
+        )
+        VALUES (
+        #{id},
+        #{generateReportTm, jdbcType=DATE},
+        #{user.id, jdbcType=VARCHAR},
+        #{user.mobile, jdbcType=VARCHAR},
+        #{sellNum,jdbcType=NUMERIC},
+        #{groupSellNum,jdbcType=NUMERIC},
+        #{calcBgnTm, jdbcType=DATE},
+        #{calcEndTm, jdbcType=DATE},
+        #{basePerformance,jdbcType=NUMERIC},
+        #{groupPerformance,jdbcType=NUMERIC},
+        #{totalPerformance,jdbcType=NUMERIC}
+        )
+    </insert>
+
+    <insert id="generateReport" parameterType="com.zhou.customer.entity.Param"
+            keyProperty="id" useGeneratedKeys="true">
+        <![CDATA[
+ 			INSERT INTO t_report
+		( c_seller_id,c_seller_mobile,n_sell_num,n_group_num,n_base_performance,n_group_performance,n_total_performance,
+		t_bgn_tm,t_end_tm)
+
+		select  tmp.id,tmp.c_mobile,tmp.base,tmp.base+tmp.performance,ifnull(du.n_base_return,0),ifnull(n_sell_return,0),
+		(tmp.base*ifnull(du.n_base_return,0)+(tmp.base+tmp.performance)*ifnull(n_sell_return,0)),
+		#{bgndate},#{enddate}
+
+		from
+		(select tu1.id,tu1.c_user_cnm,tu1.c_mobile,ifnull(b.n_sell_num,0) base,
+		(
+		(select ifnull(sum(ts1.n_sell_num),0) from t_sell_list ts1
+		where ts1.t_sell_tm >=  #{bgndate} and ts1.t_sell_tm < #{enddate}
+		and ts1.c_seller_id in (select tu2.id from t_user tu2 where tu2.c_conn_mobile=tu1.c_mobile))
+		 +
+		(select ifnull(sum(ts2.n_sell_num),0) from t_sell_list ts2
+		     where ts2.t_sell_tm >=  #{bgndate} and ts2.t_sell_tm < #{enddate}
+		     and ts2.c_seller_id in
+		         (select tu3.id from t_user tu3 where tu3.c_conn_mobile in (
+		              select tu2.c_mobile from t_user tu2 where tu2.c_conn_mobile=tu1.c_mobile)
+		         )	)
+		) performance
+
+		from  t_user tu1
+		    left join t_sell_list  b on tu1.id=b.c_seller_id
+		         and b.t_sell_tm >=  #{bgndate} and b.t_sell_tm < #{enddate}
+		where tu1.c_status='1'
+		) tmp left join t_product du on du.n_base_line <= tmp.base+tmp.performance
+		            and du.n_max_line > tmp.base+tmp.performance
+		where tmp.base+tmp.performance > 0
+ 		]]>
+
+    </insert>
+
+    <select id="findReport" resultMap="result" parameterType="com.zhou.customer.entity.Param">
+        SELECT * FROM t_report
+        where 1=1
+        <if test="bgndate != null">
+            and t_generate_tm >= #{bgndate}
+        </if>
+        <if test="enddate != null">
+            and t_generate_tm &lt; #{enddate}
+        </if>
+        <if test="mobile != null and mobile != '' ">
+            and c_seller_mobile like CONCAT(CONCAT('%',#{mobile},'%'))
+        </if>
+    </select>
+
+    <delete id="delete" parameterType="int">
+        delete from t_report where id=#{id}
+    </delete>
+
+</mapper>

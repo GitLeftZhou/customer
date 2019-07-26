@@ -1,0 +1,72 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD com.example.Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhou.customer.mapper.TradeMapper">
+    <resultMap id="result" type="com.zhou.customer.entity.Trade">
+        <result property="id" column="id"/>
+        <result property="sellTm" column="t_sell_tm"/>
+        <result property="user.id" column="c_seller_id"/>
+        <result property="user.mobile" column="c_seller_mobile"/>
+        <result property="sellNum" column="n_sell_num"/>
+        <result property="bookinCnm" column="c_bookin_cnm"/>
+        <result property="status" column="c_status"/>
+    </resultMap>
+
+    <select id="listTrade" resultMap="result">
+        SELECT * FROM t_sell_list order by t_sell_tm desc limit 200
+    </select>
+
+    <select id="findTradeById" resultMap="result">
+        SELECT * FROM t_sell_list where id=#{id}
+    </select>
+
+    <select id="findTradeByMobile" resultMap="result">
+        SELECT * FROM t_sell_list where c_mobile=#{mobile}
+    </select>
+
+    <select id="findTradeByDateRange" resultMap="result" parameterType="com.zhou.customer.entity.Param">
+        SELECT * FROM t_sell_list
+        where 1=1
+        <if test="bgndate != null">
+            and t_sell_tm >= #{bgndate}
+        </if>
+        <if test="enddate != null">
+            and t_sell_tm &lt; #{enddate}
+        </if>
+        <if test="mobile != null and mobile != '' ">
+            and c_seller_mobile like CONCAT(CONCAT('%',#{mobile},'%'))
+        </if>
+    </select>
+
+    <insert id="insert" parameterType="com.zhou.customer.entity.Trade"
+            keyProperty="id" useGeneratedKeys="true">
+        INSERT INTO t_sell_list
+        (
+        id,t_sell_tm,c_seller_id,c_seller_mobile,n_sell_num,c_bookin_cnm,c_status
+        )
+        VALUES (
+        #{id},
+        #{sellTm, jdbcType=DATE},
+        #{user.id, jdbcType=VARCHAR},
+        #{user.mobile, jdbcType=VARCHAR},
+        #{sellNum,jdbcType=NUMERIC},
+        #{bookinCnm, jdbcType=VARCHAR},'1'
+        )
+    </insert>
+
+    <delete id="delete" parameterType="int">
+        delete from t_sell_list where id=#{id}
+    </delete>
+
+    <update id="deleteSofty" parameterType="com.zhou.customer.entity.Trade">
+        update t_sell_list set c_status ='0'
+        where id=#{id}
+    </update>
+
+    <update id="update" parameterType="com.zhou.customer.entity.Trade">
+        update t_sell_list set t_sell_tm=#{sellTm, jdbcType=DATE},
+        n_sell_num=#{sellNum,jdbcType=NUMERIC},c_bookin_cnm=#{bookinCnm}
+        where id=#{id}
+    </update>
+</mapper>

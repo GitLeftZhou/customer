@@ -1,0 +1,63 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD com.example.Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhou.customer.mapper.UserMapper">
+    <resultMap id="result" type="com.zhou.customer.entity.User">
+        <result property="id" column="id"/>
+        <result property="username" column="c_user_cnm"/>
+        <result property="mobile" column="c_mobile"/>
+        <result property="password" column="c_password"/>
+        <result property="connMobile" column="c_conn_mobile"/>
+        <result property="payInfo" column="c_pay_info"/>
+        <result property="status" column="c_status"/>
+    </resultMap>
+
+    <select id="listUser" resultMap="result">
+        SELECT * FROM t_user where (length(ifnull(c_conn_mobile,'0')) &lt; 11 or length(ifnull(c_mobile,'0')) &lt;
+        11)and c_conn_mobile != '0' order by T_CRT_TM DESC limit 200
+    </select>
+
+    <select id="findUserById" resultMap="result">
+        SELECT * FROM t_user where id=#{id}
+    </select>
+
+    <select id="findUserByName" resultMap="result">
+        SELECT * FROM t_user where c_user_cnm like CONCAT(CONCAT('%',#{username},'%'))
+    </select>
+
+    <select id="findUserByMobile" resultMap="result">
+        SELECT * FROM t_user where c_mobile like CONCAT(CONCAT('%',#{mobile},'%'))
+    </select>
+
+    <insert id="insertUser" parameterType="com.zhou.customer.entity.User"
+            keyProperty="id" useGeneratedKeys="true">
+        INSERT INTO t_user
+        (
+        id,c_user_cnm,c_password,c_mobile,c_conn_mobile,c_pay_info
+        )
+        VALUES (
+        #{id},
+        #{username, jdbcType=VARCHAR},
+        #{password, jdbcType=VARCHAR},
+        #{mobile, jdbcType=VARCHAR},
+        #{connMobile, jdbcType=VARCHAR},
+        #{payInfo, jdbcType=VARCHAR}
+        )
+    </insert>
+
+    <delete id="delete" parameterType="int">
+        delete from t_user where id=#{id}
+    </delete>
+
+    <update id="deleteSofty" parameterType="com.zhou.customer.entity.User">
+        update t_user set c_status ='0'
+        where id=#{id}
+    </update>
+
+    <update id="update" parameterType="com.zhou.customer.entity.User">
+        update t_user set c_user_cnm=#{username},
+        c_password=#{password},c_mobile=#{mobile} ,c_conn_mobile=#{connMobile},c_pay_info=#{payInfo},c_status=#{status}
+        where id=#{id}
+    </update>
+</mapper>

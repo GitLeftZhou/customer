@@ -1,0 +1,12 @@
+step 1.Configure mainClass in pom.xml
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.zhou.customer.CustomerApplication</mainClass>
+                </configuration>
+            </plugin>
+step 2. Create TemplatesResolver.java
+step 3. Registry TemplatesResolver.java as Spring Bean
+step 4. Set TemplatesResolver properties in MyMvcConfig.java
+step 5. maven projects ----> your project  ----> lifecycle----> clean -----> package
